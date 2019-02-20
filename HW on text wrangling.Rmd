@@ -1,0 +1,345 @@
+---
+title: "HW on text wrangling"
+author: "Vicki Hertzberg"
+date: "2/19/2019"
+output: html_document
+---
+### Homework 4, due 3/6
+
+```{r setup chunk 0, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(stringr)
+library(stringi)
+```
+
+###Section 1.
+
+Suppose we have a vector `vText` as follows:
+
+```{r Intro 1}
+vText <- c('nurse', 'nut', 'ninja', 'nutrient', 'under', 'unusual')
+```
+
+We want to write a regular expression that matches `n`, `nu`, `un`, or `unu` in `vText` and replaces the matching patterns with `.`. To do this, the R code is as follows:
+
+```{r}
+pattern <- 'u?nu?'
+gsub(pattern, '.', vText)
+```
+
+####Problem 1.
+
+Suppose you have another vector vText as follows:
+
+```{r Problem 1}
+
+vText <- c("google", "logo", "dig", "blog", "boogie")
+
+```
+
+You want to match `g`, `og`, `go`, or `ogo` and replace with `.`.
+
+Write the R code that will make that happen.
+
+####Answer to Problem 1.
+
+```{r Answer 1}
+
+#Insert the code to answer the problem here.
+
+```
+
+###Section 2.
+
+You have 3 strings of text that you wish to merge. One way to do this is to use the `paste` function.
+
+```{r Intro 2}
+
+x <- "I AM SAM. I AM SAM. SAM I AM."
+y <- "THAT SAM-I-AM! THAT SAM-I-AM! I DO NOT LIKE THAT SAM-I-AM!"
+z <- "DO YOU LIKE GREEN EGGS AND HAM?"
+
+paste(x, y, z, collapse = NULL)
+
+
+```
+
+Extra credit: What is the difference if you use the `paste0` function instead of the `paste` function above?
+
+####Problem 2.
+
+Suppose that you now have 4 lines of text as follows:
+
+```{r Problem 2}
+
+W <- "Hey Diddle Diddle, the cat and the fiddle,"
+X <- "The cow jumped over the moon."
+Y <- "The little boy laughed to see such a sport,"
+Z <- "And the dish ran away with the spoon."
+
+```
+
+Write the R code below to merge these 3 strings.
+
+####Answer to Problem 2.
+
+```{r Answer 2}
+
+#Insert the code to answer the problem here.
+
+```
+
+###Section 3.
+
+An alternative way to merge these text strings is to concatenate them with the `str_c` function from the `stringr` package.
+
+Suppose we want to concatenate the 3 strings we did above, but also NA. We can do this in these two ways. What is the difference? (Answer to yourself)
+
+```{r Intro 3}
+
+paste(X, Y, Z, NA, collapse = NULL)
+str_c(X, Y, Z, NA, collapse = NULL)
+
+```
+
+What is the difference between the two results? (Answer to yourself.)
+
+####Problem 3.
+
+We now want to concatenate our 4 vectors and NA. Do this using both methods.
+
+```{r Problem 3}
+
+W <- "Hey Diddle Diddle, the cat and the fiddle,"
+X <- "The cow jumped over the moon."
+Y <- "The little boy laughed to see such a sport,"
+Z <- "And the dish ran away with the spoon."
+
+```
+
+####Answer to Problem 3.
+
+```{r Answer 3}
+
+#Insert the code to answer the problem here.
+
+```
+
+###Section 4.
+
+We can use the `str_sub` function to extract parts of strings. Suppose I wanted to extract the last 5 letter of my name.
+
+```{r Intro 4}
+
+myName <- "Vicki Hertzberg"
+Length <- str_length(myName)
+last5letters <- str_sub(myName, Length-4, Length)
+last5letters
+
+```
+
+####Problem 4. 
+Suppose Melinda Higgins wants to extract the last *6* letters of her name.
+
+```{r Problem 4}
+
+herName <- "Melinda Higgins"
+
+```
+
+Write the code below to extract the last 6 letters of her name.
+
+####Answer to Problem 4.
+
+```{r Answer 4}
+
+#Insert the code to answer the problem here.
+
+```
+
+###Section 5
+
+Suppose I have a string and I want to split it into unique words based on the occurrence of a separator, as follows:
+
+```{r Intro 5}
+
+myString <- "The_quick_brown_fox_jumped_over_the_lazy_dog"
+
+#the separator is the character "_"
+
+mySeparatedString <- str_split(myString, "_")
+mySeparatedString
+
+```
+If you look in your environment you will see that `mySeparatedString` is a List of 1.
+
+####Problem 5.
+
+I want to separate the following string into separate words:
+
+```{r Problem 5}
+
+myNewString <- "Now_is_the_time_for_all_good_men_to_come_to_the_aid_of_their_country"
+
+```
+
+Split this new string into separate words:
+
+####Answer to Problem 5.
+
+```{r Answer 5}
+
+#Insert the code to answer the problem here.
+
+```
+
+
+###Section 6.
+
+On another occasion, I need the same string split so that the last word comes off, and the rest remains intact. I can achieve that in the following way:
+
+```{r Intro 6}
+
+myString <- "The_quick_brown_fox_jumped_over_the_lazy_dog"
+myNewSplitSpring <- str_split(myString, "_", n=2)
+myNewSplitSpring
+
+```
+
+####Problem 6. 
+
+Suppose we wanted to split off the first "word" from `myNewString`. Again, we have 
+
+```{r Problem 6}
+
+myNewString <- "Now_is_the_time_for_all_good_men_to_come_to_the_aid_of_their_country"
+
+```
+
+Split off the first word but leave the rest intact.
+
+####Answer 6.
+
+```{r Answer 6}
+
+#Insert the code to answer the problem here.
+
+```
+
+###Section 7.
+
+With the `stringi` package there is functionality to count the number of words in a string.
+
+```{r Intro 7}
+
+newString <- "The quick brown fox jumps over the lazy dog."
+stri_count_words(newString)
+
+```
+####Problem 7.
+
+```{r}
+
+yourNewString <- "Now is the time for all good men to come to the aid of their country"
+
+```
+
+Use the `stri_count_words` function as above to count the number of distinct words in `yourNewString`.
+
+####Answer 7.
+
+```{r Answer 7}
+
+#Insert the code to answer the problem here.
+
+```
+
+###Section 8.
+
+Let's say you have a string listing famous mathematicians and you want to know if there are any duplicates in the list. You would do this as follows:
+
+```{r Intro 8}
+
+mathematicians <- c("Goedel", "Euler", "Gauss", "Hilbert", "Goedel", "Fermat", "LaGrange", "Gauss")
+mathematicians[stri_duplicated(mathematicians)]
+
+```
+
+####Problem 8.
+
+Suppose you have string listing famouse nurses and you want to find the duplicates. Here is the list:
+
+```{r Problem 8}
+nurses <-c("Nightingale", "Barton", "Dix", "Sanger", "Barton", "Woodruff", "Lincoln", "Dix", "Peplau")
+```
+
+####Answer 8.
+
+```{r Answer 8}
+
+#Insert your code to address the problem here
+
+```
+
+###Section 9.
+
+The `LETTERS` object is a vector of length 26, consisting of all of the capital letters. Suppose we wanted to use this object to create the string`A-B_C-D_E-F_G-H_I-J_K-L_M-N_O-P_Q-R_S-T_U-V_W-X_Y-Z_`. To achieve this, we  use the following commands:
+
+```{r Intro 9}
+
+stri_join(LETTERS, separators = c("-","_"), collapse = "")
+
+```
+
+####Problem 9.
+
+Suppose we create the object `DIGITS` as follows:
+
+```{r Problem 9}
+
+DIGITS <- c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+
+```
+
+How can we form the string `0_1-2_3-4_5-6_7-8_9-'?
+
+####Answer 9.
+
+```{r Answer 9}
+
+#Insert the code to solve the problem here.
+
+```
+
+###Section 10
+
+Suppose we want to replace `statistician` with `mathematician` and `average` with `median` in the following pun:
+
+```{r Intro 10}
+
+pun <- "A statistician can have his head in an oven and his feet in ice, and he will say that on the average he feels fine"
+punModified <- stri_replace_all_fixed(pun, c("statistician", "average"), c("mathematician", "median"), vectorize_all = FALSE)
+punModified
+
+```
+
+####Problem 10
+
+Using the original pun, replace `his` with `her` and ` he ` with ` she `:
+
+```{r Problem 10}
+
+pun
+
+```
+
+####Answer 10 
+
+Note that the word `head` also starts with `he` but we don't want to substitute `she` into there.
+
+```{r Answer 10}
+
+#Insert the code to answer the problem here.
+
+```
+
