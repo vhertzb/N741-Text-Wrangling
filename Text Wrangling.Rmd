@@ -1,7 +1,7 @@
 ---
 title: "Text Wrangling"
 author: "Vicki Hertzberg"
-date: "2/19/2019"
+date: "2/24/2021"
 output: html_document
 ---
 
@@ -32,6 +32,8 @@ library(methods); packageVersion("methods")
 library(tm); packageVersion("tm")
 library(wordcloud); packageVersion("wordcloud")
 library(RColorBrewer); packageVersion("RColorBrewer")
+library(janitor); packageVersion("janitor")
+library(tidytext); packageVersion("tidytext")
 
 
 ```
@@ -290,18 +292,20 @@ ggplot(data = speaker_freq, aes(x=line, y=speak)) +
 We can also ingest text by scraping it from the internet. Let's look at the discography of David Bowie, as listed on Wikipedia:
 
 
+Get the data
+
 ```{r}
 
-# Grab the table of David Bowie recordings from Wikipedia
-# We need to have called up the packages rvest and methods to do this.
-url <- "https://en.wikipedia.org/wiki/List_of_songs_recorded_by_David_Bowie#Z"
-tables <- url %>%
-  read_html() %>%
-  html_nodes(xpath='//*[@id="mw-content-text"]/div/table[2]')
-tables
-songs <- html_table(tables[[1]])
-glimpse(songs)
-
+url <- "https://en.wikipedia.org/wiki/List_of_songs_recorded_by_David_Bowie"
+tables <- url %>% 
+  read_html() %>% 
+  html_nodes("table")
+Bowie_songs <- tables %>%
+  purrr::pluck(3) %>%
+  html_table(fill = TRUE) %>%
+  janitor::clean_names() %>%
+  select(song, writer_s, year)
+glimpse(Bowie_songs)
 
 ```
 
@@ -311,102 +315,80 @@ First let's clean this up a bit.
 
 # Clean the data
 
-songs <- songs %>%
-  mutate(Song = gsub('\\"', "", Song), Year = as.numeric(Year)) %>%
-  rename(songwriters = `Writer(s)`)
+Bowie_songs <- Bowie_songs %>%
+  mutate(song = gsub('\\"', "", song), year = as.numeric(year)) 
+
+glimpse(Bowie_songs)
 
 ```
 
-It appears that Bowie recorded 418 songs. Who wrote all of them?
+It appears that Bowie recorded 400 songs. Who wrote all of them?
 
 ```{r}
 
 # Count the number of different songwriters
 pattern <- "Bowie"
-bowie_wrote <- grepl(pattern, songs$songwriters)
-sum(bowie_wrote)
+Bowie_songs$bowie_wrote <- grepl(pattern, Bowie_songs$writer_s)
+sum(Bowie_songs$bowie_wrote)
 
 
 ```
 
-Another important concept in text mining is to calculate the _term frequency - inverse document frequency (tf-idf)_, also called the _document term matrix_. The frequency of term _t_ in document _d_ is denoted as _t f (t,d)_ and is equal to the number of times that the term _t_ appears in document _d_. The _inverse document frequency_ measures the prevalence of a term across a set of documents,
+Such a prolific writer, what was he writing about? 
 
-\begin{equation}
-idf(t,D)=log{\frac{|D|}{|\{d \in D: t \in d\}}}
-\end{equation}
-
-Finally, we also use _tf.idf(t,d,D)_ which we calculate as 
-
-\begin{equation}
-tf(t,D)xidf(t,D)
-\end{equation}
-
-This is frequently use in search engines, when the relevance of a particular word is needed across a corpus.
-
-Commonly used words like "the" and "a" will appear in every document. Thus, their inverse document frequencies will be zero, and their _tf.idf_ will be zero regardless of the term frequency. Documents with high _tf.idf_ scores for a particular term will contain that term many times relative to its appearance across many documents, lending increased relevance of that document to the search term of concern.
-
-The `DocumentTermMatrix()` function in the `tm` (text mining) package will create a document term matrix with one row per document and one column per term. Let's find the term frequency information in the titles of the songs that Bowie sang.
+First restrict to just the 337 songs for which he is a writer.
 
 ```{r}
 
-#We called up the package tm (standing for text mining) to do this.
-song_titles <- VCorpus(VectorSource(songs$Song)) %>%
-  tm_map(removeWords, stopwords("english")) %>%
-  DocumentTermMatrix(control = list(weighting = weightTfIdf))
-findFreqTerms(song_titles, 25)
-
+Bowie_songs %>% filter(bowie_wrote == "TRUE") -> Bowie_songs_only
 
 ```
-We see that songs from the album _Tin Machine_ have "(Tin Machine)" appended to their name. Let's fix that then look at the term frequency information again. Looking through the titles, we see two more problems to fix, so let's do those as well.
+
+So what did Bowie write about?
 
 ```{r}
 
-# A bit of clean up
-pattern <- "\\(Tin Machine\\)"
-songs$Song <- sub(pattern, "", songs$Song)
-pattern2 <- "\\(Live\\)"
-songs$Song <- sub(pattern2, "", songs$Song)
-pattern5 <- "Bowie\\)"
-songs$Song <- sub(pattern5, "", songs$Song)
-pattern6 <- "!"
-songs$Song <- sub(pattern6, "", songs$Song)
-pattern4 <- "Segue"
-songs$Song <- sub(pattern4, "", songs$Song)
-pattern7 <- "\\(Segue\\)"
-songs$Song <- sub(pattern7, "", songs$Song)
-pattern8 <- "the"
-songs$Song <- sub(pattern8, "", songs$Song)
-pattern9 <- "The"
-songs$Song <- sub(pattern9, "", songs$Song)
-pattern10 <- "David"
-songs$Song <- sub(pattern10, "", songs$Song)
-pattern11 <- "and"
-songs$Song <- sub(pattern11, "", songs$Song)
+Bowie_songs_only %>%
+  unnest_tokens(word, song) %>%
+  anti_join(get_stopwords(), by = "word") %>%
+  count(word, sort = TRUE) %>%
+  arrange(desc(n))  -> Bowie_words
 
-pattern3 <- "\\(\\)"
-songs$Song <- sub(pattern3, "", songs$Song)
-
-songs$Song[353] <- "Tin Machine"
-
-# Run the frequencies again
-song_titles <- VCorpus(VectorSource(songs$Song)) %>%
-  tm_map(removeWords, stopwords("english")) %>%
-  DocumentTermMatrix(control = list(weighting = weightTfIdf))
-findFreqTerms(song_titles, 25)
+```
 
 
+
+
+
+```{r}
+
+#Get rid of parentheses and words in between
+Bowie_songs_only$song <- gsub(" *\\(.*?\\) *","",as.character(Bowie_songs_only$song))
+
+# Get rid of square brackets and words in between (used by Wikipedia to denote footnotes)
+Bowie_songs_only$song <- gsub(" *\\[.*?\\] *","",as.character(Bowie_songs_only$song))
+
+# Get rid of leading and trailing whitespace
+Bowie_songs_only$song <- trimws(Bowie_songs_only$song, "both")
+
+Bowie_songs_only %>%
+  select(song) %>%
+  unnest_tokens(word, song) %>%
+  anti_join(get_stopwords(), by = "word") %>%
+  count(word, sort = TRUE) %>%
+  arrange(desc(n)) -> Bowie_words
 
 ```
 
 Another way to look at text is to create a _word cloud_, which you can think of as a multivariate histogram for words. You will be surprised, I'm sure, to learn that R has a `wordcloud` package that will allow you to create this object.
+
 
 ```{r}
 
 # Create wordcloud from Bowie song titles
 
 #We need to have the package wordcloud and RColorBrewer for this to work.
-wordcloud(VCorpus(VectorSource(songs$Song)), max.words = 30, scale = c(4, 1), colors = topo.colors(n=30), random.color = TRUE)
+wordcloud(words = Bowie_words$word, freq = Bowie_words$n, max.words = 30, scale = c(4, 1), colors = topo.colors(n=30), random.color = TRUE)
 
 ```
-
 
