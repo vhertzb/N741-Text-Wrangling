@@ -309,7 +309,7 @@ glimpse(Bowie_songs)
 
 ```
 
-First let's clean this up a bit.
+First let's clean this up a bit more.
 
 ```{r}
 

@@ -1,10 +1,10 @@
 ---
 title: "HW on text wrangling"
 author: "Vicki Hertzberg"
-date: "2/19/2019"
+date: "2/24/2021"
 output: html_document
 ---
-### Homework 4, due 3/6
+### Homework 4, due 3/3
 
 ```{r setup chunk 0, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
