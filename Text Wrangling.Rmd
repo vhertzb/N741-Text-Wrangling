@@ -1,7 +1,7 @@
 ---
 title: "Text Wrangling"
 author: "Vicki Hertzberg"
-date: "2/24/2021"
+date: "2/9/2022"
 output: html_document
 ---
 
@@ -47,7 +47,10 @@ We are going to use text mining techniques to explore the play _The Tragedy of H
 
 # We have called the package RCurl previously to allow us to call the URL
 hamlet_url <- "http://www.gutenberg.org/cache/epub/1787/pg1787.txt"
-Hamlet_raw <- RCurl::getURL(hamlet_url)
+Hamlet_raw0 <- read_html(hamlet_url)
+Hamlet_raw0 %>%
+  html_nodes("p") %>%
+  html_text() -> Hamlet_raw
 
 ```
 
@@ -249,19 +252,15 @@ sum(Fortinbras)
 Before we can use these data, we want to convert the *logical* vectors into *numeric* vectors, then tidy the data. There is also a bunch of unwanted text at the beginning and end of the raw text, and we want to get rid of it so that our analyses just pertain to the corpus of the play itself, which starts at line 274 and extends to line 5130.
 
 ```{r}
-
-# Let's tidy up the dataset
-# Naturally we need to have called up the tidyverse package for this to work
-
 speaker_freq <- data.frame(Hamlet, Polonius, Claudius, Horatio, Ophelia, Gertrude, Laertes) %>%
   mutate(line=1:length(hamlet)) %>%
   gather(key = "character", value = "speak", -line) %>%
   mutate(speak = as.numeric(speak)) %>%
   filter(line > 273 & line < 5131)
 
-glimpse(speaker_freq)
-  
 ```
+
+
 
 Another thing to do before we do the deep dive: Let's create some context of helpful information, namely the lines at which each Act starts and stops.
 
