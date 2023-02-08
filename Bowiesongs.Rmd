@@ -1,0 +1,141 @@
+---
+title: "Testing mutate"
+author: "Vicki Hertzberg"
+date: "2/17/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+First let's call up the packages we will need:
+
+```{r}
+
+library(RCurl); packageVersion("RCurl")
+library(tidyverse); packageVersion("tidyverse")
+library(stringr); packageVersion("stringr")
+library(rvest); packageVersion("rvest")
+library(methods); packageVersion("methods")
+library(tm); packageVersion("tm")
+library(wordcloud); packageVersion("wordcloud")
+library(RColorBrewer); packageVersion("RColorBrewer")
+library(janitor); packageVersion("janitor")
+library(tidytext); packageVersion("tidytext")
+
+```
+
+
+Get the data
+
+```{r}
+
+url <- "https://en.wikipedia.org/wiki/List_of_songs_recorded_by_David_Bowie"
+tables <- url %>% 
+  read_html() %>% 
+  html_nodes("table")
+Bowie_songs <- tables %>%
+  purrr::pluck(3) %>%
+  html_table(fill = TRUE) %>%
+  janitor::clean_names() %>%
+  select(song, writer_s, year)
+glimpse(Bowie_songs)
+
+```
+
+First let's clean this up a bit.
+
+```{r}
+
+# Clean the data
+
+Bowie_songs <- Bowie_songs %>%
+  mutate(song = gsub('\\"', "", song), year = as.numeric(year)) 
+
+glimpse(Bowie_songs)
+
+```
+
+It appears that Bowie recorded 400 songs. Who wrote all of them?
+
+```{r}
+
+# Count the number of different songwriters
+pattern <- "Bowie"
+Bowie_songs$bowie_wrote <- grepl(pattern, Bowie_songs$writer_s)
+sum(Bowie_songs$bowie_wrote)
+
+
+```
+
+Such a prolific writer, what was he writing about? 
+
+First restrict to just the 337 songs for which he is a writer.
+
+```{r}
+
+Bowie_songs %>% filter(bowie_wrote == "TRUE") -> Bowie_songs_only
+
+```
+
+So what did Bowie write about?
+
+```{r}
+
+Bowie_songs_only %>%
+  unnest_tokens(word, song) %>%
+  anti_join(get_stopwords(), by = "word") %>%
+  count(word, sort = TRUE) %>%
+  arrange(desc(n))  -> Bowie_words
+
+```
+
+
+
+
+
+```{r}
+
+Bowie_songs_only$song <- gsub(" *\\(.*?\\) *","",as.character(Bowie_songs_only$song))
+
+Bowie_songs_only %>%
+  unnest_tokens(word, song) %>%
+  anti_join(get_stopwords(), by = "word") %>%
+  count(word, sort = TRUE) %>%
+  arrange(desc(n)) %>%
+  head()
+
+```
+
+Another way to look at text is to create a _word cloud_, which you can think of as a multivariate histogram for words. You will be surprised, I'm sure, to learn that R has a `wordcloud` package that will allow you to create this object.
+
+
+```{r}
+
+# Create wordcloud from Bowie song titles
+
+#We need to have the package wordcloud and RColorBrewer for this to work.
+wordcloud(words = Bowie_words$word, freq = Bowie_words$n, max.words = 30, scale = c(4, 1), colors = topo.colors(n=30), random.color = TRUE)
+
+```
+
+
+
+
+
+
+
+```{r}
+
+dbstring <- "David Bowie"
+nchar(dbstring)
+Bowie_songs %>%
+  pull(writer_s) %>%
+  str_subset("David Bowie") %>%
+  length()
+
+```
+
+
+
